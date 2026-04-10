@@ -1,53 +1,57 @@
 # IV Monitoring System - Quick Start Guide
 
-Get your responsive medical dashboard up and running in minutes!
+Get the production-ready IV monitoring backend running in **60 seconds**!
 
 ## 📋 Prerequisites
 
-- Python 3.8+
+- Python 3.9+
 - Modern web browser (Chrome, Firefox, Safari, Edge)
-- FastAPI backend (already included in this project)
-- HTTP server (built-in or simple Python HTTP server)
+- Terminal/Command Prompt
 
-## 🚀 Installation & Startup (3 steps)
+## 🚀 Three Steps to Success
 
-### Step 1: Install Dependencies
+### Step 1: Install Dependencies (30 seconds)
+
 ```bash
-# Navigate to project directory
-cd "Fluid monitoring"
-
-# Install Python dependencies
 pip install -r requirements.txt
 ```
 
-**Required packages:**
-- fastapi
-- uvicorn
-- sqlalchemy
-- pydantic
-- python-dotenv
-- requests
-- flask-cors (if using Flask alternatively)
-
-### Step 2: Start the Backend
+### Step 2: Start Backend (10 seconds)
 
 ```bash
-# Using FastAPI (Recommended - uses port 8000)
-uvicorn app:app --reload --host 0.0.0.0 --port 8000
-
-# or alternatively
-python app.py
+python start.py
 ```
 
-**Expected output:**
+**You should see:**
 ```
-INFO:     Uvicorn running on http://0.0.0.0:8000
-INFO:     Application startup complete
+╔════════════════════════════════════════════════════════════╗
+║  IV MONITORING SYSTEM - BACKEND STARTING                  ║
+╚════════════════════════════════════════════════════════════╝
+
+✓ Backend server running at http://localhost:8000
+✓ API Documentation: http://localhost:8000/docs
+✓ Alternative Docs: http://localhost:8000/redoc
 ```
 
-### Step 3: Open the Dashboard
+### Step 3: Test the Backend (10 seconds)
 
-**Option A: Direct Browser Open**
+Open **new terminal** and run:
+
+```bash
+python test_api.py
+```
+
+---
+
+## 🌐 Access API
+
+Open browser to: **http://localhost:8000/docs**
+
+This gives you interactive Swagger UI to test all endpoints!
+
+---
+
+## 📡 Quick API Tests
 ```
 File → Open → dashboard.html
 ```
