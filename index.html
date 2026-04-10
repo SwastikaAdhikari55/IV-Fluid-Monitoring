@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI IV Monitoring System - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-brand">
+                <span class="navbar-icon">🏥</span>
+                <span class="navbar-title">AI IV Monitoring System</span>
+            </div>
+            <div class="navbar-right">
+                <div class="notification-bell">
+                    <span class="bell-icon">🔔</span>
+                    <span class="notification-count" id="notificationCount">0</span>
+                </div>
+                <div class="user-profile">
+                    <div class="user-avatar">👨‍⚕️</div>
+                    <span class="user-name">Dr. Smith</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="menu-item active">
+                    <a href="#dashboard" class="menu-link" onclick="switchTab('dashboard', event)">
+                        <span class="menu-icon">📊</span>
+                        <span class="menu-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#patients" class="menu-link" onclick="switchTab('patients', event)">
+                        <span class="menu-icon">👥</span>
+                        <span class="menu-text">Patients</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#alerts" class="menu-link" onclick="switchTab('alerts', event)">
+                        <span class="menu-icon">⚠️</span>
+                        <span class="menu-text">Alerts</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#settings" class="menu-link" onclick="switchTab('settings', event)">
+                        <span class="menu-icon">⚙️</span>
+                        <span class="menu-text">Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <!-- Top Control Bar -->
+                <div class="control-bar">
+                    <h1 class="page-title">Patient Monitoring Dashboard</h1>
+                    <div class="control-buttons">
+                        <button class="btn btn-primary" onclick="startMonitoring()">
+                            <span class="btn-icon">▶️</span> Start Monitoring
+                        </button>
+                        <button class="btn btn-danger" onclick="stopMonitoring()">
+                            <span class="btn-icon">⏹️</span> Stop Monitoring
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetAlerts()">
+                            <span class="btn-icon">🔄</span> Reset Alerts
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Patient Info Panel -->
+                <div class="patient-info-panel">
+                    <div class="info-item">
+                        <span class="info-label">Patient Name:</span>
+                        <span class="info-value" id="patientName">John Doe</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Bed Number:</span>
+                        <span class="info-value" id="bedNumber">#412</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Bottle Capacity:</span>
+                        <span class="info-value" id="bottleCapacity">500 mL</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Start Time:</span>
+                        <span class="info-value" id="startTime">10:30 AM</span>
+                    </div>
+                    <div class="device-status">
+                        <div class="status-indicator connected" id="sensorStatus">
+                            <span class="status-dot"></span> Sensor Connected
+                        </div>
+                        <div class="status-indicator connected" id="wifiStatus">
+                            <span class="status-dot"></span> WiFi Connected
+                        </div>
+                        <div class="status-indicator battery-high" id="batteryStatus">
+                            <span class="status-dot"></span> Battery: 95%
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Dashboard Cards Grid -->
+                <div class="dashboard-grid">
+                    <!-- IV Level Card -->
+                    <div class="card iv-level-card">
+                        <div class="card-header">
+                            <h2 class="card-title">IV Level</h2>
+                            <span class="card-icon">💧</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="metric-value" id="ivLevel">75.5%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill" style="width: 75.5%"></div>
+                            </div>
+                            <p class="metric-label">Current: <span id="ivLevelValue">75.5</span> mL</p>
+                            <p class="metric-label">Status: <span id="ivStatus" class="status-green">Normal</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Drip Rate Card -->
+                    <div class="card drip-rate-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Drip Rate</h2>
+                            <span class="card-icon">💧‍💧</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="metric-value" id="dripRate">45.2</div>
+                            <p class="metric-unit">mL/min</p>
+                            <div class="drip-indicator">
+                                <span class="drip-drop">💧</span>
+                                <span class="drip-drop">💧</span>
+                                <span class="drip-drop">💧</span>
+                            </div>
+                            <p class="metric-label">Optimal Range: 30-60 mL/min</p>
+                        </div>
+                    </div>
+
+                    <!-- Status Card -->
+                    <div class="card status-card">
+                        <div class="card-header">
+                            <h2 class="card-title">System Status</h2>
+                            <span class="card-icon">🔋</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="status-indicator-large" id="statusIndicator">
+                                <span class="status-circle green"></span>
+                                <span class="status-text">Normal</span>
+                            </div>
+                            <div class="status-details">
+                                <p>Temperature: <span id="temperature">22.5°C</span></p>
+                                <p>Pressure: <span id="pressure">Normal</span></p>
+                                <p>Last Reading: <span id="lastReading">2s ago</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estimated Finish Time Card -->
+                    <div class="card finish-time-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Estimated Finish Time</h2>
+                            <span class="card-icon">⏱️</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="metric-value" id="finishTime">2h 15m</div>
+                            <p class="metric-label">Estimated: <span id="finishTimeExact">12:45 PM</span></p>
+                            <p class="metric-label">Confidence: <span id="confidence">92%</span></p>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="confidenceFill" style="width: 92%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-section">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">IV Level Over Time</h3>
+                            <span class="chart-info">Last 30 minutes</span>
+                        </div>
+                        <canvas id="ivLevelChart" class="chart-canvas"></canvas>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Drip Rate Over Time</h3>
+                            <span class="chart-info">Last 30 minutes</span>
+                        </div>
+                        <canvas id="dripRateChart" class="chart-canvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Alert Panel -->
+                <div class="alert-panel">
+                    <div class="alert-header">
+                        <h3 class="alert-title">📢 Alerts & Notifications</h3>
+                        <button class="clear-alerts-btn" onclick="clearAlerts()">Clear All</button>
+                    </div>
+                    <div class="alerts-container" id="alertsContainer">
+                        <!-- Alerts will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patients Tab -->
+            <div id="patients" class="tab-content">
+                <h1 class="page-title">Patients Management</h1>
+                <div class="patients-list" id="patientsList">
+                    <!-- Patients list will be populated here -->
+                    <p class="placeholder">Patient list loading...</p>
+                </div>
+            </div>
+
+            <!-- Alerts History Tab -->
+            <div id="alerts" class="tab-content">
+                <h1 class="page-title">Alerts History</h1>
+                <div class="alerts-history" id="alertsHistory">
+                    <!-- Alerts history will be populated here -->
+                    <p class="placeholder">No alerts recorded</p>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content">
+                <h1 class="page-title">Settings</h1>
+                <div class="settings-panel">
+                    <div class="settings-section">
+                        <h3>Monitoring Thresholds</h3>
+                        <div class="setting-item">
+                            <label>Critical Level (Red Alert):</label>
+                            <input type="number" value="30" min="0" max="100">
+                            <span>%</span>
+                        </div>
+                        <div class="setting-item">
+                            <label>Warning Level (Yellow Alert):</label>
+                            <input type="number" value="60" min="0" max="100">
+                            <span>%</span>
+                        </div>
+                        <div class="setting-item">
+                            <label>Refresh Interval:</label>
+                            <input type="number" value="2" min="1" max="10">
+                            <span>seconds</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Notifications</h3>
+                        <div class="setting-checkbox">
+                            <input type="checkbox" id="notifyBuzzer" checked>
+                            <label for="notifyBuzzer">Enable Buzzer Alerts</label>
+                        </div>
+                        <div class="setting-checkbox">
+                            <input type="checkbox" id="notifyMobile" checked>
+                            <label for="notifyMobile">Enable Mobile Notifications</label>
+                        </div>
+                        <div class="setting-checkbox">
+                            <input type="checkbox" id="notifyEmail" checked>
+                            <label for="notifyEmail">Enable Email Notifications</label>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+                        <button class="btn btn-secondary" onclick="resetSettings()">Reset to Default</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner"></div>
+        <p>Fetching data...</p>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="script.js"></script>
+</body>
+</html>
