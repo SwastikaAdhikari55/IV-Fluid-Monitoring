@@ -371,6 +371,54 @@
             background: #f9f9ff;
         }
 
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 12px;
+            color: #667590;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #d8e0ef;
+            background: #f8fbff;
+            font-size: 14px;
+            color: #2c3e50;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 13px;
+            border-radius: 10px;
+        }
+
+        .btn-small:hover {
+            transform: translateY(-1px);
+        }
+
         /* ===== DEVICE STATUS ===== */
         .device-status {
             display: flex;
@@ -993,6 +1041,40 @@
                 <!-- PATIENTS PAGE -->
                 <div id="patients-page" class="page-content hidden">
                     <h2 style="margin-bottom: 20px;">Patients</h2>
+                    <div class="card-large card" style="margin-bottom: 24px;">
+                        <div class="card-title">Admin Panel</div>
+                        <p style="color: #5a6b8f; margin-bottom: 18px;">Add new patients and manage existing records from one central place.</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label" for="patient-name-input">Patient Name</label>
+                                <input id="patient-name-input" class="form-input" type="text" placeholder="Enter full name" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="bed-number-input">Bed Number</label>
+                                <input id="bed-number-input" class="form-input" type="text" placeholder="e.g. ICU-11" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="device-id-input">Device ID</label>
+                                <input id="device-id-input" class="form-input" type="text" placeholder="e.g. device_011" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="iv-level-input">IV Level (%)</label>
+                                <input id="iv-level-input" class="form-input" type="number" min="0" max="100" placeholder="75" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="drip-rate-input">Drip Rate</label>
+                                <input id="drip-rate-input" class="form-input" type="number" min="0" placeholder="30" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="start-time-input">Start Time</label>
+                                <input id="start-time-input" class="form-input" type="time" value="08:00" />
+                            </div>
+                        </div>
+                        <div class="button-group" style="margin-top: 16px;">
+                            <button class="btn btn-primary" onclick="addPatient()">Add Patient</button>
+                            <button class="btn btn-secondary" onclick="resetPatientForm()">Clear Form</button>
+                        </div>
+                    </div>
                     <div class="card-large card">
                         <div class="table-responsive">
                             <table class="patient-table">
@@ -1005,6 +1087,7 @@
                                         <th>Drip Rate</th>
                                         <th>Status</th>
                                         <th>Start Time</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="patient-table-body"></tbody>
@@ -1063,17 +1146,18 @@
         // ============================================================
         // STATE MANAGEMENT
         // ============================================================
+        let nextPatientId = 11;
         const PATIENTS = [
-            { name: 'John Doe', bed: 'ICU-01', device: 'device_001', ivLevel: 78, dripRate: 38, status: 'Normal', startTime: '08:30 AM' },
-            { name: 'Maria Lee', bed: 'ICU-02', device: 'device_002', ivLevel: 59, dripRate: 32, status: 'Warning', startTime: '08:42 AM' },
-            { name: 'Samuel Park', bed: 'ICU-03', device: 'device_003', ivLevel: 92, dripRate: 45, status: 'Normal', startTime: '09:05 AM' },
-            { name: 'Fatima Khan', bed: 'ICU-04', device: 'device_004', ivLevel: 24, dripRate: 20, status: 'Critical', startTime: '07:55 AM' },
-            { name: 'Liam Smith', bed: 'ICU-05', device: 'device_005', ivLevel: 66, dripRate: 34, status: 'Normal', startTime: '08:10 AM' },
-            { name: 'Olivia Chen', bed: 'ICU-06', device: 'device_006', ivLevel: 51, dripRate: 29, status: 'Warning', startTime: '09:12 AM' },
-            { name: 'Noah Davis', bed: 'ICU-07', device: 'device_007', ivLevel: 15, dripRate: 18, status: 'Critical', startTime: '07:30 AM' },
-            { name: 'Ava Johnson', bed: 'ICU-08', device: 'device_008', ivLevel: 83, dripRate: 41, status: 'Normal', startTime: '08:20 AM' },
-            { name: 'Ethan Brown', bed: 'ICU-09', device: 'device_009', ivLevel: 49, dripRate: 27, status: 'Warning', startTime: '09:00 AM' },
-            { name: 'Sophia Wilson', bed: 'ICU-10', device: 'device_010', ivLevel: 71, dripRate: 36, status: 'Normal', startTime: '08:55 AM' }
+            { id: 1, name: 'John Doe', bed: 'ICU-01', device: 'device_001', ivLevel: 78, dripRate: 38, status: 'Normal', startTime: '08:30 AM' },
+            { id: 2, name: 'Maria Lee', bed: 'ICU-02', device: 'device_002', ivLevel: 59, dripRate: 32, status: 'Warning', startTime: '08:42 AM' },
+            { id: 3, name: 'Samuel Park', bed: 'ICU-03', device: 'device_003', ivLevel: 92, dripRate: 45, status: 'Normal', startTime: '09:05 AM' },
+            { id: 4, name: 'Fatima Khan', bed: 'ICU-04', device: 'device_004', ivLevel: 24, dripRate: 20, status: 'Critical', startTime: '07:55 AM' },
+            { id: 5, name: 'Liam Smith', bed: 'ICU-05', device: 'device_005', ivLevel: 66, dripRate: 34, status: 'Normal', startTime: '08:10 AM' },
+            { id: 6, name: 'Olivia Chen', bed: 'ICU-06', device: 'device_006', ivLevel: 51, dripRate: 29, status: 'Warning', startTime: '09:12 AM' },
+            { id: 7, name: 'Noah Davis', bed: 'ICU-07', device: 'device_007', ivLevel: 15, dripRate: 18, status: 'Critical', startTime: '07:30 AM' },
+            { id: 8, name: 'Ava Johnson', bed: 'ICU-08', device: 'device_008', ivLevel: 83, dripRate: 41, status: 'Normal', startTime: '08:20 AM' },
+            { id: 9, name: 'Ethan Brown', bed: 'ICU-09', device: 'device_009', ivLevel: 49, dripRate: 27, status: 'Warning', startTime: '09:00 AM' },
+            { id: 10, name: 'Sophia Wilson', bed: 'ICU-10', device: 'device_010', ivLevel: 71, dripRate: 36, status: 'Normal', startTime: '08:55 AM' }
         ];
 
         const STATE = {
@@ -1104,9 +1188,64 @@
                         <td>${patient.dripRate} drops/min</td>
                         <td><span class="status-badge ${badgeClass}" style="padding: 4px 8px; font-size: 0.85rem;">${patient.status}</span></td>
                         <td>${patient.startTime}</td>
+                        <td>
+                            <button class="btn-small btn-acknowledge" onclick="deletePatient(${patient.id})">Delete</button>
+                        </td>
                     </tr>
                 `;
             }).join('');
+        }
+
+        function addPatient() {
+            const nameInput = document.getElementById('patient-name-input');
+            const bedInput = document.getElementById('bed-number-input');
+            const deviceInput = document.getElementById('device-id-input');
+            const ivInput = document.getElementById('iv-level-input');
+            const dripInput = document.getElementById('drip-rate-input');
+            const startTimeInput = document.getElementById('start-time-input');
+
+            const name = nameInput.value.trim();
+            const bed = bedInput.value.trim();
+            const device = deviceInput.value.trim();
+            const ivLevel = Number(ivInput.value);
+            const dripRate = Number(dripInput.value);
+            const startTime = startTimeInput.value;
+
+            if (!name || !bed || !device || Number.isNaN(ivLevel) || Number.isNaN(dripRate) || !startTime) {
+                alert('Please complete all fields before adding a patient.');
+                return;
+            }
+
+            const status = ivLevel <= 20 ? 'Critical' : ivLevel <= 55 ? 'Warning' : 'Normal';
+            PATIENTS.push({
+                id: nextPatientId++,
+                name,
+                bed,
+                device,
+                ivLevel,
+                dripRate,
+                status,
+                startTime: startTime ? startTime : 'Unknown'
+            });
+
+            renderPatientList();
+            resetPatientForm();
+        }
+
+        function deletePatient(id) {
+            const index = PATIENTS.findIndex(patient => patient.id === id);
+            if (index === -1) return;
+            PATIENTS.splice(index, 1);
+            renderPatientList();
+        }
+
+        function resetPatientForm() {
+            document.getElementById('patient-name-input').value = '';
+            document.getElementById('bed-number-input').value = '';
+            document.getElementById('device-id-input').value = '';
+            document.getElementById('iv-level-input').value = '';
+            document.getElementById('drip-rate-input').value = '';
+            document.getElementById('start-time-input').value = '08:00';
         }
 
         // ============================================================
