@@ -1136,7 +1136,7 @@
         // CONFIGURATION
         // ============================================================
         const CONFIG = {
-            API_URL: 'http://localhost:5000', // Flask backend URL
+            API_URL: 'http://localhost:8000',
             DEVICE_ID: 'device_001',
             REFRESH_INTERVAL: 2000, // 2 seconds
             CHART_HISTORY: 30, // Keep last 30 data points
@@ -1146,20 +1146,6 @@
         // ============================================================
         // STATE MANAGEMENT
         // ============================================================
-        let nextPatientId = 11;
-        const PATIENTS = [
-            { id: 1, name: 'John Doe', bed: 'ICU-01', device: 'device_001', ivLevel: 78, dripRate: 38, status: 'Normal', startTime: '08:30 AM' },
-            { id: 2, name: 'Maria Lee', bed: 'ICU-02', device: 'device_002', ivLevel: 59, dripRate: 32, status: 'Warning', startTime: '08:42 AM' },
-            { id: 3, name: 'Samuel Park', bed: 'ICU-03', device: 'device_003', ivLevel: 92, dripRate: 45, status: 'Normal', startTime: '09:05 AM' },
-            { id: 4, name: 'Fatima Khan', bed: 'ICU-04', device: 'device_004', ivLevel: 24, dripRate: 20, status: 'Critical', startTime: '07:55 AM' },
-            { id: 5, name: 'Liam Smith', bed: 'ICU-05', device: 'device_005', ivLevel: 66, dripRate: 34, status: 'Normal', startTime: '08:10 AM' },
-            { id: 6, name: 'Olivia Chen', bed: 'ICU-06', device: 'device_006', ivLevel: 51, dripRate: 29, status: 'Warning', startTime: '09:12 AM' },
-            { id: 7, name: 'Noah Davis', bed: 'ICU-07', device: 'device_007', ivLevel: 15, dripRate: 18, status: 'Critical', startTime: '07:30 AM' },
-            { id: 8, name: 'Ava Johnson', bed: 'ICU-08', device: 'device_008', ivLevel: 83, dripRate: 41, status: 'Normal', startTime: '08:20 AM' },
-            { id: 9, name: 'Ethan Brown', bed: 'ICU-09', device: 'device_009', ivLevel: 49, dripRate: 27, status: 'Warning', startTime: '09:00 AM' },
-            { id: 10, name: 'Sophia Wilson', bed: 'ICU-10', device: 'device_010', ivLevel: 71, dripRate: 36, status: 'Normal', startTime: '08:55 AM' }
-        ];
-
         const STATE = {
             isMonitoring: false,
             currentData: null,
@@ -1175,19 +1161,45 @@
             }
         };
 
-        function renderPatientList() {
+        async function loadPatients() {
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/patients`);
+                if (!response.ok) throw new Error('Failed to load patients');
+                const patients = await response.json();
+                renderPatientList(patients);
+            } catch (error) {
+                console.error('Error loading patients:', error);
+                const body = document.getElementById('patient-table-body');
+                body.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align:center; padding: 24px; color: #7a869a;">Unable to load patient data.</td>
+                    </tr>
+                `;
+            }
+        }
+
+        function renderPatientList(patients) {
             const body = document.getElementById('patient-table-body');
-            body.innerHTML = PATIENTS.map(patient => {
+            if (!patients || patients.length === 0) {
+                body.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align:center; padding: 24px; color: #7a869a;">No patients found.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            body.innerHTML = patients.map(patient => {
                 const badgeClass = patient.status === 'Critical' ? 'critical' : patient.status === 'Warning' ? 'warning' : 'normal';
                 return `
                     <tr class="fade-in">
                         <td>${patient.name}</td>
-                        <td>${patient.bed}</td>
-                        <td>${patient.device}</td>
-                        <td>${patient.ivLevel}%</td>
-                        <td>${patient.dripRate} drops/min</td>
+                        <td>${patient.bed_number}</td>
+                        <td>${patient.device_id}</td>
+                        <td>${patient.iv_level}%</td>
+                        <td>${patient.drip_rate} drops/min</td>
                         <td><span class="status-badge ${badgeClass}" style="padding: 4px 8px; font-size: 0.85rem;">${patient.status}</span></td>
-                        <td>${patient.startTime}</td>
+                        <td>${patient.start_time}</td>
                         <td>
                             <button class="btn-small btn-acknowledge" onclick="deletePatient(${patient.id})">Delete</button>
                         </td>
@@ -1196,47 +1208,57 @@
             }).join('');
         }
 
-        function addPatient() {
-            const nameInput = document.getElementById('patient-name-input');
-            const bedInput = document.getElementById('bed-number-input');
-            const deviceInput = document.getElementById('device-id-input');
-            const ivInput = document.getElementById('iv-level-input');
-            const dripInput = document.getElementById('drip-rate-input');
-            const startTimeInput = document.getElementById('start-time-input');
+        async function addPatient() {
+            const payload = {
+                name: document.getElementById('patient-name-input').value.trim(),
+                bed_number: document.getElementById('bed-number-input').value.trim(),
+                device_id: document.getElementById('device-id-input').value.trim(),
+                iv_level: Number(document.getElementById('iv-level-input').value),
+                drip_rate: Number(document.getElementById('drip-rate-input').value),
+                start_time: document.getElementById('start-time-input').value
+            };
 
-            const name = nameInput.value.trim();
-            const bed = bedInput.value.trim();
-            const device = deviceInput.value.trim();
-            const ivLevel = Number(ivInput.value);
-            const dripRate = Number(dripInput.value);
-            const startTime = startTimeInput.value;
-
-            if (!name || !bed || !device || Number.isNaN(ivLevel) || Number.isNaN(dripRate) || !startTime) {
+            if (!payload.name || !payload.bed_number || !payload.device_id || Number.isNaN(payload.iv_level) || Number.isNaN(payload.drip_rate) || !payload.start_time) {
                 alert('Please complete all fields before adding a patient.');
                 return;
             }
 
-            const status = ivLevel <= 20 ? 'Critical' : ivLevel <= 55 ? 'Warning' : 'Normal';
-            PATIENTS.push({
-                id: nextPatientId++,
-                name,
-                bed,
-                device,
-                ivLevel,
-                dripRate,
-                status,
-                startTime: startTime ? startTime : 'Unknown'
-            });
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/patients`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
 
-            renderPatientList();
-            resetPatientForm();
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to add patient');
+                }
+
+                await loadPatients();
+                resetPatientForm();
+            } catch (error) {
+                console.error('Error adding patient:', error);
+                alert('Unable to add patient. Please try again.');
+            }
         }
 
-        function deletePatient(id) {
-            const index = PATIENTS.findIndex(patient => patient.id === id);
-            if (index === -1) return;
-            PATIENTS.splice(index, 1);
-            renderPatientList();
+        async function deletePatient(id) {
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/patients/${id}`, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to delete patient');
+                }
+                await loadPatients();
+            } catch (error) {
+                console.error('Error deleting patient:', error);
+                alert('Unable to delete patient. Please try again.');
+            }
         }
 
         function resetPatientForm() {
@@ -1610,8 +1632,8 @@
             // Initialize charts
             initializeCharts();
 
-            // Render patient list with mock entries
-            renderPatientList();
+            // Load persisted patient records
+            loadPatients();
 
             // Set initial patient data (mock)
             document.getElementById('patient-name').textContent = 'John Doe';
