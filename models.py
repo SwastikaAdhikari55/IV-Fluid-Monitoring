@@ -80,6 +80,24 @@ class DeviceStatus(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class Patient(Base):
+    """
+    Stores patient records for the IV monitoring system.
+    """
+    __tablename__ = "patients"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    bed_number = Column(String, nullable=False)
+    device_id = Column(String, nullable=False)
+    iv_level = Column(Float, nullable=False)
+    drip_rate = Column(Float, nullable=False)
+    status = Column(String, nullable=False)
+    start_time = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 # Database initialization function
 def init_db(database_url: str):
     """Initialize database engine and create all tables"""

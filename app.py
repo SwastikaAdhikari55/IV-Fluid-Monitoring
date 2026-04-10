@@ -22,7 +22,7 @@ from datetime import datetime
 
 # Import configuration and services
 import config
-from models import init_db, get_session_factory, DeviceStatus, Alert
+from models import init_db, get_session_factory, DeviceStatus, Alert, Patient
 from sensor_service import SensorService
 from alert_service import AlertService
 from prediction_service import PredictionService
@@ -95,6 +95,28 @@ class PredictionResponse(BaseModel):
     minutes_remaining: float
     confidence_score: float
     based_on_readings: int
+
+
+class PatientRequest(BaseModel):
+    """Schema for creating or updating a patient record"""
+    name: str
+    bed_number: str
+    device_id: str
+    iv_level: float
+    drip_rate: float
+    start_time: str
+
+
+class PatientResponse(BaseModel):
+    """Response schema for patient records"""
+    id: int
+    name: str
+    bed_number: str
+    device_id: str
+    iv_level: float
+    drip_rate: float
+    status: str
+    start_time: str
 
 
 # ============================================================================
@@ -308,6 +330,76 @@ async def get_dashboard(device_id: str = Query(None), db: Session = Depends(get_
         raise
     except Exception as e:
         logger.error(f"Error fetching dashboard: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/patients", response_model=list[PatientResponse], tags=["Patients"])
+async def list_patients(db: Session = Depends(get_db)):
+    """Return all patient records"""
+    try:
+        patients = db.query(Patient).order_by(Patient.created_at.desc()).all()
+        return [
+            PatientResponse(
+                id=p.id,
+                name=p.name,
+                bed_number=p.bed_number,
+                device_id=p.device_id,
+                iv_level=p.iv_level,
+                drip_rate=p.drip_rate,
+                status=p.status,
+                start_time=p.start_time
+            ) for p in patients
+        ]
+    except Exception as e:
+        logger.error(f"Error listing patients: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/patients", response_model=PatientResponse, tags=["Patients"])
+async def create_patient(payload: PatientRequest, db: Session = Depends(get_db)):
+    """Create a new patient record"""
+    try:
+        status = "Critical" if payload.iv_level <= config.ALERT_CRITICAL_LEVEL else "Warning" if payload.iv_level <= config.ALERT_WARNING_LEVEL else "Normal"
+        patient = Patient(
+            name=payload.name,
+            bed_number=payload.bed_number,
+            device_id=payload.device_id,
+            iv_level=payload.iv_level,
+            drip_rate=payload.drip_rate,
+            status=status,
+            start_time=payload.start_time
+        )
+        db.add(patient)
+        db.commit()
+        db.refresh(patient)
+
+        return PatientResponse(
+            id=patient.id,
+            name=patient.name,
+            bed_number=patient.bed_number,
+            device_id=patient.device_id,
+            iv_level=patient.iv_level,
+            drip_rate=patient.drip_rate,
+            status=patient.status,
+            start_time=patient.start_time
+        )
+    except Exception as e:
+        logger.error(f"Error creating patient: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/patients/{patient_id}", tags=["Patients"])
+async def delete_patient(patient_id: int, db: Session = Depends(get_db)):
+    """Delete a patient record"""
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    try:
+        db.delete(patient)
+        db.commit()
+        return {"success": True, "message": "Patient deleted"}
+    except Exception as e:
+        logger.error(f"Error deleting patient: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
