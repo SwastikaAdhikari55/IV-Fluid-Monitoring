@@ -73,7 +73,7 @@ class DashboardResponse(BaseModel):
     status_color: str  # 'green', 'yellow', 'red'
     last_reading_at: str
     active_alerts: int
-    prediction: dict = None
+    prediction: dict | None = None
 
 
 class AlertResponse(BaseModel):
@@ -345,7 +345,7 @@ async def get_prediction(device_id: str, db: Session = Depends(get_db)):
             db=db
         )
 
-        return PredictionResponse(**prediction)
+        return PredictionResponse(device_id=device_id, **prediction)
 
     except HTTPException:
         raise
