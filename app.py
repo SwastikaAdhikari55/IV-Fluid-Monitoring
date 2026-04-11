@@ -19,6 +19,7 @@ from pydantic import BaseModel
 import logging
 import asyncio
 from datetime import datetime
+from typing import Optional, Union
 
 # Import configuration and services
 import config
@@ -51,7 +52,7 @@ class SensorDataRequest(BaseModel):
     device_id: str
     iv_level: float  # 0-100% or mL
     drip_rate: float  # mL/min
-    temperature: float = None
+    temperature: Optional[float] = None
 
 
 class SensorDataResponse(BaseModel):
@@ -85,7 +86,7 @@ class AlertResponse(BaseModel):
     message: str
     status: str
     triggered_at: str
-    acknowledged_at: str = None
+    acknowledged_at: Optional[str] = None
 
 
 class PredictionResponse(BaseModel):
@@ -235,7 +236,7 @@ async def receive_sensor_data(data: SensorDataRequest, db: Session = Depends(get
             device_id=data.device_id,
             iv_level=data.iv_level,
             drip_rate=data.drip_rate,
-            temperature=data.temperature,
+            temperature=data.temperature or 0.0,
             db=db
         )
 
@@ -310,15 +311,16 @@ async def get_dashboard(device_id: str = Query(None), db: Session = Depends(get_
 
         response = []
         for device in devices:
-            active_alerts = len(AlertService.get_active_alerts(device.device_id, db))
+            device_id = str(device.device_id)
+            active_alerts = len(AlertService.get_active_alerts(device_id, db))
 
-            prediction = PredictionService.get_latest_prediction(device.device_id, db)
+            prediction = PredictionService.get_latest_prediction(device_id, db)
 
             response.append(DashboardResponse(
-                device_id=device.device_id,
-                current_iv_level=device.current_iv_level,
-                current_drip_rate=device.current_drip_rate,
-                status_color=device.status_color,
+                device_id=device_id,
+                current_iv_level=float(device.current_iv_level),  # type: ignore
+                current_drip_rate=float(device.current_drip_rate),  # type: ignore
+                status_color=str(device.status_color),
                 last_reading_at=device.last_reading_at.isoformat(),
                 active_alerts=active_alerts,
                 prediction=prediction
@@ -340,14 +342,14 @@ async def list_patients(db: Session = Depends(get_db)):
         patients = db.query(Patient).order_by(Patient.created_at.desc()).all()
         return [
             PatientResponse(
-                id=p.id,
-                name=p.name,
-                bed_number=p.bed_number,
-                device_id=p.device_id,
-                iv_level=p.iv_level,
-                drip_rate=p.drip_rate,
-                status=p.status,
-                start_time=p.start_time
+                id=int(p.id),  # type: ignore
+                name=str(p.name),
+                bed_number=str(p.bed_number),
+                device_id=str(p.device_id),
+                iv_level=float(p.iv_level),  # type: ignore
+                drip_rate=float(p.drip_rate),  # type: ignore
+                status=str(p.status),
+                start_time=str(p.start_time)
             ) for p in patients
         ]
     except Exception as e:
@@ -374,14 +376,14 @@ async def create_patient(payload: PatientRequest, db: Session = Depends(get_db))
         db.refresh(patient)
 
         return PatientResponse(
-            id=patient.id,
-            name=patient.name,
-            bed_number=patient.bed_number,
-            device_id=patient.device_id,
-            iv_level=patient.iv_level,
-            drip_rate=patient.drip_rate,
-            status=patient.status,
-            start_time=patient.start_time
+            id=int(patient.id),  # type: ignore
+            name=str(patient.name),
+            bed_number=str(patient.bed_number),
+            device_id=str(patient.device_id),
+            iv_level=float(patient.iv_level),  # type: ignore
+            drip_rate=float(patient.drip_rate),  # type: ignore
+            status=str(patient.status),
+            start_time=str(patient.start_time)
         )
     except Exception as e:
         logger.error(f"Error creating patient: {e}")
@@ -432,8 +434,8 @@ async def get_prediction(device_id: str, db: Session = Depends(get_db)):
 
         prediction = PredictionService.predict_finish_time(
             device_id=device_id,
-            current_iv_level=device.current_iv_level,
-            current_drip_rate=device.current_drip_rate,
+            current_iv_level=float(device.current_iv_level),  # type: ignore
+            current_drip_rate=float(device.current_drip_rate),  # type: ignore
             db=db
         )
 
@@ -479,7 +481,7 @@ async def get_alerts(device_id: str = Query(None), db: Session = Depends(get_db)
             "message": alert.message,
             "status": alert.status,
             "triggered_at": alert.triggered_at.isoformat(),
-            "acknowledged_at": alert.acknowledged_at.isoformat() if alert.acknowledged_at else None
+            "acknowledged_at": alert.acknowledged_at.isoformat() if alert.acknowledged_at is not None else None
         } for alert in alerts]
 
     except Exception as e:
