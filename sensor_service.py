@@ -5,6 +5,7 @@ Receives, validates, and processes sensor readings
 
 from datetime import datetime
 from sqlalchemy.orm import Session
+from typing import Optional
 from models import SensorData, DeviceStatus, Alert
 import config
 import logging
@@ -23,7 +24,7 @@ class SensorService:
 
     @staticmethod
     def ingest_sensor_data(device_id: str, iv_level: float, drip_rate: float,
-                          temperature: float = None, db: Session = None) -> dict:
+                          temperature: Optional[float] = None, db = None) -> dict:  # type: ignore
         """
         Ingest and process IoT sensor reading
 
@@ -50,21 +51,21 @@ class SensorService:
             drip_rate=drip_rate,
             temperature=temperature
         )
-        db.add(sensor_data)
+        db.add(sensor_data)  # type: ignore
 
         # Determine status color based on IV level
         status_color = SensorService._determine_status_color(iv_level)
 
         # Update or create device status
-        device_status = db.query(DeviceStatus).filter(
+        device_status = db.query(DeviceStatus).filter(  # type: ignore
             DeviceStatus.device_id == device_id
         ).first()
 
         if device_status:
-            device_status.current_iv_level = iv_level
-            device_status.current_drip_rate = drip_rate
-            device_status.status_color = status_color
-            device_status.last_reading_at = datetime.utcnow()
+            device_status.current_iv_level = iv_level  # type: ignore
+            device_status.current_drip_rate = drip_rate  # type: ignore
+            device_status.status_color = status_color  # type: ignore
+            device_status.last_reading_at = datetime.utcnow()  # type: ignore
         else:
             device_status = DeviceStatus(
                 device_id=device_id,
@@ -73,9 +74,9 @@ class SensorService:
                 status_color=status_color,
                 is_active=True
             )
-            db.add(device_status)
+            db.add(device_status)  # type: ignore
 
-        db.commit()
+        db.commit()  # type: ignore
 
         logger.info(
             f"Sensor data ingested for {device_id}: "
@@ -148,7 +149,7 @@ class SensorService:
         import random
 
         # Get last reading or create initial state
-        last_reading = db.query(SensorData).filter(
+        last_reading = db.query(SensorData).filter(  # type: ignore
             SensorData.device_id == device_id
         ).order_by(SensorData.timestamp.desc()).first()
 
@@ -170,16 +171,16 @@ class SensorService:
 
         return SensorService.ingest_sensor_data(
             device_id=device_id,
-            iv_level=round(iv_level, 2),
-            drip_rate=round(drip_rate, 2),
-            temperature=round(temperature, 1),
+            iv_level=round(float(iv_level), 2),  # type: ignore
+            drip_rate=round(float(drip_rate), 2),  # type: ignore
+            temperature=round(float(temperature), 1),  # type: ignore
             db=db
         )
 
     @staticmethod
-    def get_device_history(device_id: str, limit: int = 100, db: Session = None) -> list:
+    def get_device_history(device_id: str, limit: int = 100, db = None) -> list:  # type: ignore
         """Retrieve historical sensor data for a device"""
-        readings = db.query(SensorData).filter(
+        readings = db.query(SensorData).filter(  # type: ignore
             SensorData.device_id == device_id
         ).order_by(SensorData.timestamp.desc()).limit(limit).all()
 

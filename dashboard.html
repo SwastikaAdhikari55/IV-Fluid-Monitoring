@@ -125,14 +125,135 @@
             align-items: center;
         }
 
-        .user-profile {
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            font-size: 28px;
+            transition: transform 0.2s ease;
+            user-select: none;
+        }
+
+        .notification-bell:hover {
+            transform: scale(1.1);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 15px;
-            background: #f0f2f5;
-            border-radius: 20px;
-            cursor: pointer;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+            width: 360px;
+            max-height: 500px;
+            overflow-y: auto;
+            z-index: 1000;
+            margin-top: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .notification-dropdown.hidden {
+            display: none;
+        }
+
+        .notification-header {
+            padding: 16px 18px;
+            border-bottom: 1px solid #f0f0f0;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-item {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f5f5f5;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            transition: background 0.2s ease;
+        }
+
+        .notification-item:hover {
+            background: #f9f9ff;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-icon {
+            font-size: 18px;
+            min-width: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-icon.critical {
+            color: #ff4757;
+        }
+
+        .notification-icon.warning {
+            color: #ffa502;
+        }
+
+        .notification-icon.info {
+            color: #667eea;
+        }
+
+        .notification-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .notification-empty {
+            padding: 40px 18px;
+            text-align: center;
+            color: #999;
+        }
+
+        .notification-empty-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
         }
 
         .status-indicator-small {
@@ -887,9 +1008,21 @@
                     💉 AI IV Monitoring System
                 </div>
                 <div class="navbar-actions">
-                    <div class="user-profile">
-                        <span class="status-indicator-small"></span>
-                        <span>Monitoring Active</span>
+                    <div class="notification-bell" id="notification-bell" onclick="toggleNotificationDropdown()">
+                        🔔
+                        <div class="notification-badge" id="notification-count">0</div>
+                    </div>
+                    <div class="notification-dropdown hidden" id="notification-dropdown">
+                        <div class="notification-header">
+                            <span>Notifications & Alerts</span>
+                            <span id="dropdown-alert-count" style="font-size: 12px; background: #667eea; color: white; padding: 2px 8px; border-radius: 10px;">0</span>
+                        </div>
+                        <div id="notification-items-container">
+                            <div class="notification-empty">
+                                <div class="notification-empty-icon">✓</div>
+                                <p>No active alerts</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1497,8 +1630,14 @@
             const alerts = await fetchAlerts();
             const alertsList = document.getElementById('alerts-list');
             const alertCount = document.getElementById('alert-count');
+            const notificationCount = document.getElementById('notification-count');
+            const dropdownAlertCount = document.getElementById('dropdown-alert-count');
+            const notificationItemsContainer = document.getElementById('notification-items-container');
 
+            // Update badge counts
             alertCount.textContent = alerts.length;
+            notificationCount.textContent = alerts.length;
+            dropdownAlertCount.textContent = alerts.length;
 
             if (alerts.length === 0) {
                 alertsList.innerHTML = `
@@ -1507,9 +1646,16 @@
                         <p>No active alerts</p>
                     </div>
                 `;
+                notificationItemsContainer.innerHTML = `
+                    <div class="notification-empty">
+                        <div class="notification-empty-icon">✓</div>
+                        <p>No active alerts</p>
+                    </div>
+                `;
                 return;
             }
 
+            // Update alerts panel
             alertsList.innerHTML = alerts.map(alert => {
                 const alertClass = alert.alert_type === 'critical' ? 'critical' : alert.alert_type === 'warning' ? '' : 'info';
                 const timestamp = new Date(alert.timestamp).toLocaleTimeString();
@@ -1530,7 +1676,50 @@
                     </div>
                 `;
             }).join('');
+
+            // Update notification dropdown
+            notificationItemsContainer.innerHTML = alerts.map(alert => {
+                const timestamp = new Date(alert.timestamp).toLocaleTimeString();
+                const iconMap = {
+                    'critical': '🔴',
+                    'warning': '⚠️',
+                    'info': 'ℹ️'
+                };
+                const typeMap = {
+                    'critical': 'critical',
+                    'warning': 'warning',
+                    'info': 'info'
+                };
+                const icon = iconMap[alert.alert_type] || 'ℹ️';
+                const typeClass = typeMap[alert.alert_type] || 'info';
+                const title = alert.alert_type === 'critical' ? 'CRITICAL ALERT' : alert.alert_type === 'warning' ? 'WARNING' : 'INFO';
+
+                return `
+                    <div class="notification-item">
+                        <div class="notification-icon ${typeClass}">${icon}</div>
+                        <div class="notification-content">
+                            <div class="notification-title">${title}</div>
+                            <div class="notification-message">${alert.message}</div>
+                            <div class="notification-time">${timestamp}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
+
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notification-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        // Close notification dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const bell = document.getElementById('notification-bell');
+            const dropdown = document.getElementById('notification-dropdown');
+            if (!bell.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
 
         // ============================================================
         // CONTROL FUNCTIONS
