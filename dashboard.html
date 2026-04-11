@@ -125,135 +125,14 @@
             align-items: center;
         }
 
-        .notification-bell {
-            position: relative;
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            background: #f0f2f5;
+            border-radius: 20px;
             cursor: pointer;
-            font-size: 28px;
-            transition: transform 0.2s ease;
-            user-select: none;
-        }
-
-        .notification-bell:hover {
-            transform: scale(1.1);
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: #ff4757;
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 12px;
-            box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
-        }
-
-        .notification-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
-            width: 360px;
-            max-height: 500px;
-            overflow-y: auto;
-            z-index: 1000;
-            margin-top: 12px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .notification-dropdown.hidden {
-            display: none;
-        }
-
-        .notification-header {
-            padding: 16px 18px;
-            border-bottom: 1px solid #f0f0f0;
-            font-weight: 600;
-            color: #333;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .notification-item {
-            padding: 14px 18px;
-            border-bottom: 1px solid #f5f5f5;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-            transition: background 0.2s ease;
-        }
-
-        .notification-item:hover {
-            background: #f9f9ff;
-        }
-
-        .notification-item:last-child {
-            border-bottom: none;
-        }
-
-        .notification-icon {
-            font-size: 18px;
-            min-width: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .notification-icon.critical {
-            color: #ff4757;
-        }
-
-        .notification-icon.warning {
-            color: #ffa502;
-        }
-
-        .notification-icon.info {
-            color: #667eea;
-        }
-
-        .notification-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .notification-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 4px;
-        }
-
-        .notification-message {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 6px;
-            line-height: 1.4;
-        }
-
-        .notification-time {
-            font-size: 11px;
-            color: #999;
-        }
-
-        .notification-empty {
-            padding: 40px 18px;
-            text-align: center;
-            color: #999;
-        }
-
-        .notification-empty-icon {
-            font-size: 32px;
-            margin-bottom: 12px;
         }
 
         .status-indicator-small {
@@ -1008,21 +887,9 @@
                     💉 AI IV Monitoring System
                 </div>
                 <div class="navbar-actions">
-                    <div class="notification-bell" id="notification-bell" onclick="toggleNotificationDropdown()">
-                        🔔
-                        <div class="notification-badge" id="notification-count">0</div>
-                    </div>
-                    <div class="notification-dropdown hidden" id="notification-dropdown">
-                        <div class="notification-header">
-                            <span>Notifications & Alerts</span>
-                            <span id="dropdown-alert-count" style="font-size: 12px; background: #667eea; color: white; padding: 2px 8px; border-radius: 10px;">0</span>
-                        </div>
-                        <div id="notification-items-container">
-                            <div class="notification-empty">
-                                <div class="notification-empty-icon">✓</div>
-                                <p>No active alerts</p>
-                            </div>
-                        </div>
+                    <div class="user-profile">
+                        <span class="status-indicator-small"></span>
+                        <span>Monitoring Active</span>
                     </div>
                 </div>
             </div>

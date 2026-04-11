@@ -5,7 +5,6 @@ Monitors IV levels and triggers alerts based on thresholds
 
 from datetime import datetime
 from sqlalchemy.orm import Session
-from typing import Optional
 from models import Alert, SensorData, DeviceStatus
 import config
 import logging
@@ -20,7 +19,7 @@ class AlertService:
     """
 
     @staticmethod
-    def check_alert_status(device_id: str, iv_level: float, db: Session) -> Optional[Alert]:
+    def check_alert_status(device_id: str, iv_level: float, db: Session) -> Alert or None:
         """
         Determines if an alert should be triggered based on IV level
 
@@ -47,7 +46,7 @@ class AlertService:
                 Alert.status == "active"
             ).first()
             if active_alert:
-                AlertService.resolve_alert(int(active_alert.id), db)  # type: ignore
+                AlertService.resolve_alert(active_alert.id, db)
             return None
 
         # Check if there's already an active alert of this type
@@ -106,8 +105,8 @@ class AlertService:
         """Mark alert as acknowledged by staff"""
         alert = db.query(Alert).filter(Alert.id == alert_id).first()
         if alert:
-            alert.status = "acknowledged"  # type: ignore
-            alert.acknowledged_at = datetime.utcnow()  # type: ignore
+            alert.status = "acknowledged"
+            alert.acknowledged_at = datetime.utcnow()
             db.commit()
             logger.info(f"Alert {alert_id} acknowledged")
 
@@ -116,15 +115,15 @@ class AlertService:
         """Mark alert as resolved (IV refilled or level restored)"""
         alert = db.query(Alert).filter(Alert.id == alert_id).first()
         if alert:
-            alert.status = "resolved"  # type: ignore
-            alert.resolved_at = datetime.utcnow()  # type: ignore
+            alert.status = "resolved"
+            alert.resolved_at = datetime.utcnow()
             db.commit()
             logger.info(f"Alert {alert_id} resolved")
 
     @staticmethod
-    def get_active_alerts(device_id: Optional[str] = None, db: Optional[Session] = None) -> list:  # type: ignore
+    def get_active_alerts(device_id: str = None, db: Session = None) -> list:
         """Retrieve all active alerts, optionally filtered by device"""
-        query = db.query(Alert).filter(Alert.status == "active")  # type: ignore
+        query = db.query(Alert).filter(Alert.status == "active")
         if device_id:
             query = query.filter(Alert.device_id == device_id)
         return query.all()
