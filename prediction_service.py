@@ -5,7 +5,6 @@ Uses historical data and linear regression to estimate when IV will be empty
 
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from typing import Optional
 from models import Prediction, SensorData
 import config
 import logging
@@ -117,10 +116,10 @@ class PredictionService:
 
         # Trend factor adjusts prediction based on drip rate changes
         trend_factor = recent_avg / historical_avg
-        return float(np.clip(trend_factor, 0.8, 1.2))  # Limit extreme adjustments
+        return np.clip(trend_factor, 0.8, 1.2)  # Limit extreme adjustments
 
     @staticmethod
-    def get_latest_prediction(device_id: str, db: Session) -> Optional[dict]:
+    def get_latest_prediction(device_id: str, db: Session) -> dict or None:
         """Retrieve the most recent prediction for a device"""
         prediction = db.query(Prediction).filter(
             Prediction.device_id == device_id
@@ -131,7 +130,7 @@ class PredictionService:
 
         # Check if prediction is still valid (< 5 minutes old)
         age = datetime.utcnow() - prediction.calculated_at
-        if age > timedelta(minutes=5):  # type: ignore
+        if age > timedelta(minutes=5):
             logger.info(f"Prediction for {device_id} expired (age: {age})")
             return None
 
