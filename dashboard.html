@@ -971,6 +971,29 @@
                         </div>
                     </div>
 
+                    <!-- PATIENT INFO PANEL -->
+                    <div class="card card-large" style="margin-top: 24px;">
+                        <div class="card-title">Patient Information</div>
+                        <div class="patient-info">
+                            <div class="info-item">
+                                <div class="info-label">Patient Name</div>
+                                <div class="info-value" id="patient-name">John Doe</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Bed Number</div>
+                                <div class="info-value" id="bed-number">ICU-05</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">IV Bottle Capacity</div>
+                                <div class="info-value" id="bottle-capacity-info">500 mL</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Start Time</div>
+                                <div class="info-value" id="start-time">--:--</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- ALERT PANEL -->
                     <div class="alert-panel" style="margin-top: 24px;">
                         <div class="alert-panel-title">
@@ -1637,6 +1660,13 @@
 
             // Load persisted patient records
             loadPatients();
+
+            // Set initial patient data (mock)
+            document.getElementById('patient-name').textContent = 'John Doe';
+            document.getElementById('bed-number').textContent = 'ICU-05';
+            document.getElementById('bottle-capacity-info').textContent = '500 mL';
+            document.getElementById('bottle-capacity').textContent = '500 mL';
+            document.getElementById('start-time').textContent = new Date().toLocaleTimeString();
 
             // Auto-start monitoring (optional)
             // startMonitoring();
